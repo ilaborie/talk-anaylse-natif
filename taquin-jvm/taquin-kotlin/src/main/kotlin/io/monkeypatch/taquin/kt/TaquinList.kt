@@ -5,7 +5,7 @@ import io.monkeypatch.taquin.kt.Move.LEFT
 import io.monkeypatch.taquin.kt.Move.RIGHT
 import io.monkeypatch.taquin.kt.Move.UP
 
-data class TaquinArray private constructor(private val size: Int, private val values: IntArray) : Taquin {
+data class TaquinList private constructor(private val size: Int, private val values: List<Int>) : Taquin {
 
     private val maxIndex = size * size - 1
 
@@ -42,7 +42,7 @@ data class TaquinArray private constructor(private val size: Int, private val va
         val newPosition = holePosition.move(move)
         val newHole = newPosition.toIndex(size)
 
-        return TaquinArray(size, values.swap(holeIndex, newHole))
+        return TaquinList(size, values.toMutableList().swap(holeIndex, newHole).toList())
     }
 
     override fun availableMoves(): Set<Move> {
@@ -72,31 +72,19 @@ data class TaquinArray private constructor(private val size: Int, private val va
     override fun toString(): String =
         displayString()
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        other as TaquinArray
-        if (!values.contentEquals(other.values)) return false
-        return true
-    }
-
-    override fun hashCode(): Int =
-        values.contentHashCode()
-
     companion object {
 
 
         fun fromString(size: Int, s: String): Taquin {
             val arrayLen = size * size
 
-            val (array, counts) = s.split(",")
+            val (lst, counts) = s.split(",")
                 .map { it.trim() }
                 .map { it.toInt() }
-                .foldIndexed(IntArray(arrayLen) to IntArray(arrayLen)) { index, (array, counts), i ->
+                .fold(emptyList<Int>() to IntArray(arrayLen)) { (lst, counts), i ->
                     // check size (crash if not OK)
-                    array[index] = i
                     counts[i] += 1
-                    array to counts
+                    (lst + i) to counts
                 }
 
             // Check has hole
@@ -106,7 +94,7 @@ data class TaquinArray private constructor(private val size: Int, private val va
                 )
             }
 
-            return TaquinArray(size, array)
+            return TaquinList(size, lst)
         }
     }
 

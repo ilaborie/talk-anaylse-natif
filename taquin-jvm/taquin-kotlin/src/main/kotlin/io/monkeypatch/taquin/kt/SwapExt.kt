@@ -7,3 +7,10 @@ fun IntArray.swap(i: Int, j: Int): IntArray {
     result[j] = this[i]
     return result
 }
+
+fun <T> MutableList<T>.swap(i: Int, j: Int): MutableList<T> {
+    val tmp = this[i]
+    this[i] = this[j]
+    this[j] = tmp
+    return this
+}

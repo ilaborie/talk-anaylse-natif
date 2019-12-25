@@ -5,5 +5,14 @@ enum class Move {
     UP,
     RIGHT,
     DOWN,
-    LEFT
+    LEFT;
+
+    val inverse: Move by lazy {
+        when (this) {
+            UP    -> DOWN
+            RIGHT -> LEFT
+            DOWN  -> UP
+            LEFT  -> RIGHT
+        }
+    }
 }
