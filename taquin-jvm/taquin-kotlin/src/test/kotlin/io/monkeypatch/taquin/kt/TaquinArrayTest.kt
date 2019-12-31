@@ -14,6 +14,15 @@ class TaquinArrayTest : DescribeSpec() {
 
         describe("Simple solved 3x3 Taquin") {
             val t = TaquinArray.fromString(3, "1,2,3,  4,5,6,  7,8,0") as TaquinArray
+            val t2 = TaquinArray.fromString(3, "1,2,3,  4,5,6,  7,8,0") as TaquinArray
+
+            it("should be equals") {
+                t shouldBe t2
+            }
+
+            it("should have equals hashcode") {
+                t.hashCode() shouldBe t2.hashCode()
+            }
 
             it("should be solved") {
                 t.isSolved() shouldBe true
@@ -38,21 +47,21 @@ class TaquinArrayTest : DescribeSpec() {
             }
 
             it("move RIGHT") {
-                val result = t.apply(RIGHT)
+                val result = t.next(RIGHT)
                 result.displayString() shouldBe """1 2 3
                                                   |4 5 6
                                                   |7 · 8""".trimMargin("|")
             }
 
             it("move DOWN") {
-                val result = t.apply(DOWN)
+                val result = t.next(DOWN)
                 result.displayString() shouldBe """1 2 3
                                                    |4 5 ·
                                                    |7 8 6""".trimMargin("|")
             }
 
             it("should have no inversion") {
-                t.countInversion shouldBe 0
+                t.countInversion() shouldBe 0
             }
 
             it("should be ok to solve") {
@@ -74,7 +83,7 @@ class TaquinArrayTest : DescribeSpec() {
             }
 
             it("should have one inversion") {
-                (t as TaquinArray).countInversion shouldBe 1
+                (t as TaquinArray).countInversion() shouldBe 1
             }
             it("should not be solvable") {
                 t.check() shouldBe false
@@ -96,7 +105,7 @@ class TaquinArrayTest : DescribeSpec() {
             }
 
             it("should have some inversion") {
-                t.countInversion shouldBe 2
+                t.countInversion() shouldBe 2
             }
 
             it("should be solvable") {
@@ -104,7 +113,7 @@ class TaquinArrayTest : DescribeSpec() {
             }
 
             it("should close to result") {
-                val result = t.apply(UP)
+                val result = t.next(UP)
                 result.displayString() shouldBe """1 2 3
                                                   |4 5 6
                                                   |7 8 ·""".trimMargin("|")
@@ -126,7 +135,7 @@ class TaquinArrayTest : DescribeSpec() {
             }
 
             it("should have some inversion") {
-                t.countInversion shouldBe 0
+                t.countInversion() shouldBe 0
             }
 
             it("should be solvable") {
@@ -134,7 +143,7 @@ class TaquinArrayTest : DescribeSpec() {
             }
 
             it("should close to result") {
-                val result = t.apply(LEFT)
+                val result = t.next(LEFT)
                 result.displayString() shouldBe """1 2 3
                                                   |4 5 6
                                                   |7 8 ·""".trimMargin("|")

@@ -1,24 +1,30 @@
 package io.monkeypatch.taquin.kt
 
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger("main")
+
 fun main(args: Array<String>) {
-    val (size, pos) = args
+    val (kind, size, pos) = args
 
-    val t = TaquinArray.fromString(size.toInt(), pos)
+    val t = if (kind.startsWith("a")) TaquinArray.fromString(size.toInt(), pos)
+    else TaquinList.fromString(size.toInt(), pos)
+
     println(t.displayString())
-    println("Is solved:, ${t.isSolved()}")
+    logger.info("Is solved: {}", t.isSolved())
 
-    when (val result = t.checkAndSolve()) {
-        is Success -> {
-            println("Solved in ${result.value.size}")
-            var state = t
-            result.value.forEach { move ->
-                println("Apply $move:")
-                state = state.apply(move)
-                println(state.displayString())
-                println()
-            }
+    try {
+        val result = t.solve(Monitor.logger())
+        println("Solved in ${result.size}")
+        var state = t
+        result.forEach { move ->
+            println("Apply $move:")
+            state = state.next(move)
+            println(state.displayString())
+            println()
         }
-        is Failure ->
-            println("Cannot solve this taquin!")
+    } catch (e: Throwable) {
+        logger.error("Cannot solve this taquin!", e)
     }
+
 }

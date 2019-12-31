@@ -1,6 +1,7 @@
 package io.monkeypatch.taquin.kt
 
 import org.slf4j.LoggerFactory
+import java.text.DecimalFormat
 
 
 interface Monitor<S, A> {
@@ -48,10 +49,12 @@ interface Monitor<S, A> {
             }
         }
 
-
         fun <S, A> logger(): Monitor<S, A> = object : Monitor<S, A> {
             private var depth = 0
             private val logger = LoggerFactory.getLogger("MONITOR")
+            private val formtter = DecimalFormat.getNumberInstance().apply {
+                isGroupingUsed = true
+            }
 
             override fun nextDepth() {
                 depth += 1
@@ -59,15 +62,15 @@ interface Monitor<S, A> {
             }
 
             override fun found(actions: List<A>) {
-                logger.info("Found a solution {}", actions.joinToString(", "))
+                logger.info("Found a solution in {} moves:\n{}", actions.size, actions.joinToString(", "))
             }
 
             override fun foundNewStates(size: Int) {
-                logger.info("Found {} new states", size)
+                logger.info("Found {} new states", formtter.format(size))
             }
 
             override fun visitedStates(size: Int) {
-                logger.info("Visited {} states", size)
+                logger.info("Visited {} states", formtter.format(size))
             }
         }
 
