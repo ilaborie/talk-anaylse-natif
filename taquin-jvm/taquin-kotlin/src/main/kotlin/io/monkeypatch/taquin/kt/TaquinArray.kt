@@ -1,15 +1,15 @@
 package io.monkeypatch.taquin.kt
 
 data class TaquinArray(
-    override val size: Int,
-    private val values: IntArray
+    override val size: Byte,
+    private val values: ByteArray
 ) : Taquin {
 
-    override fun get(position: Position): Int =
-        values[position.toIndex(size)]
+    override fun get(position: Position): Byte =
+        values[position.toIndex(size).toInt()]
 
-    internal val holeIndex: Int =
-        values.indexOf(0)
+    internal val holeIndex: Byte =
+        values.indexOf(0).toByte()
 
     override val holePosition: Position =
         Position.fromIndex(holeIndex, size)
@@ -22,12 +22,12 @@ data class TaquinArray(
         val newPosition = holePosition.move(move)
         val newHole = newPosition.toIndex(size)
 
-        return copy(values = values.swap(holeIndex, newHole))
+        return copy(values = values.swap(holeIndex.toInt(), newHole.toInt()))
     }
 
     override fun toString(): String =
         values.toList()
-            .chunked(size)
+            .chunked(size.toInt())
             .joinToString(",  ") { it.joinToString(",") }
 
     override fun equals(other: Any?): Boolean {
@@ -46,20 +46,20 @@ data class TaquinArray(
         fun solved(size: Int): Taquin =
             (size * size).let { sq ->
                 TaquinArray(
-                    size,
-                    values = IntArray(sq) { i -> (i + 1) % sq }
+                    size.toByte(),
+                    values = ByteArray(sq) { i -> ((i + 1) % sq).toByte() }
                 )
             }
 
-        fun fromString(size: Int, s: String): Taquin {
+        fun fromString(size: Byte, s: String): Taquin {
             val arrayLen = size * size
 
             val (array, counts) = s.split(",")
                 .map { it.trim() }
                 .map { it.toInt() }
-                .foldIndexed(IntArray(arrayLen) to IntArray(arrayLen)) { index, (array, counts), i ->
+                .foldIndexed(ByteArray(arrayLen) to IntArray(arrayLen)) { index, (array, counts), i ->
                     // check size (crash if not OK)
-                    array[index] = i
+                    array[index] = i.toByte()
                     counts[i] += 1
                     array to counts
                 }
@@ -67,7 +67,7 @@ data class TaquinArray(
             // Check has hole
             counts.forEachIndexed { index, count ->
                 if (count != 1) throw IllegalStateException(
-                    "${Position.fromIndex(index, size)} should have one entry, got $count"
+                    "${Position.fromIndex(index.toByte(), size)} should have one entry, got $count"
                 )
             }
 

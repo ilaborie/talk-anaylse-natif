@@ -7,8 +7,8 @@ private val logger = LoggerFactory.getLogger("main")
 fun main(args: Array<String>) {
     val (kind, size, pos) = args
 
-    val t = if (kind.startsWith("a")) TaquinArray.fromString(size.toInt(), pos)
-    else TaquinList.fromString(size.toInt(), pos)
+    val t = if (kind.startsWith("a")) TaquinArray.fromString(size.toByte(), pos)
+    else TaquinList.fromString(size.toByte(), pos)
 
     println(t.displayString())
     logger.info("Is solved: {}", t.isSolved())

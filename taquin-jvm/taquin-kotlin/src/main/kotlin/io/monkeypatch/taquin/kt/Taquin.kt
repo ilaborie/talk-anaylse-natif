@@ -1,6 +1,9 @@
 package io.monkeypatch.taquin.kt
 
-import io.monkeypatch.taquin.kt.Move.*
+import io.monkeypatch.taquin.kt.Move.DOWN
+import io.monkeypatch.taquin.kt.Move.LEFT
+import io.monkeypatch.taquin.kt.Move.RIGHT
+import io.monkeypatch.taquin.kt.Move.UP
 
 
 typealias State = Taquin
@@ -8,23 +11,23 @@ typealias StateWithHistory = Pair<State, List<Move>>
 
 interface Taquin {
 
-    val size: Int
-    val maxIndex: Int
-        get() = size * size - 1
+    val size: Byte // require size <=16
+    val maxIndex: Byte
+        get() = (size * size - 1).toByte()
     val holePosition: Position
 
-    operator fun get(position: Position): Int
+    operator fun get(position: Position): Byte
 
     fun countInversion(): Int {
         return (0..maxIndex)
             .flatMap { i -> ((i + 1)..maxIndex).map { j -> i to j } }
-            .map { (i, j) -> this[Position.fromIndex(i, size)] to this[Position.fromIndex(j, size)] }
+            .map { (i, j) -> this[Position.fromIndex(i.toByte(), size)] to this[Position.fromIndex(j.toByte(), size)] }
             .filterNot { (i, j) -> i == HOLE || j == HOLE }
             .count { (i, j) -> i > j }
     }
 
     fun check(): Boolean =
-        countInversion() % 2 == 0
+        size <= 16 && countInversion() % 2 == 0
 
     fun solve(monitor: Monitor<State, Move>): List<Move> {
         require(check()) { "Not Solvable!" }
@@ -61,28 +64,29 @@ interface Taquin {
         return solveAux(next, nextVisited, monitor)
     }
 
+
     fun next(move: Move): Taquin
 
     fun availableMoves(): Set<Move> {
         val (x, y) = holePosition
 
         val result = mutableSetOf<Move>()
-        if (x != 0) result.add(RIGHT)
-        if (x != (size - 1)) result.add(LEFT)
-        if (y != 0) result.add(DOWN)
-        if (y != (size - 1)) result.add(UP)
+        if (x != 0.toByte()) result.add(RIGHT)
+        if (x != (size - 1).toByte()) result.add(LEFT)
+        if (y != 0.toByte()) result.add(DOWN)
+        if (y != (size - 1).toByte()) result.add(UP)
         return result
     }
 
     fun isSolved(): Boolean =
         (0 until size)
             .flatMap { x ->
-                (0 until size).map { y -> Position(x, y) }
+                (0 until size).map { y -> Position(x.toByte(), y.toByte()) }
             }
             .map { pos ->
                 val value = this[pos]
                 val index = pos.toIndex(size)
-                val goodNormalValue = value == index + 1
+                val goodNormalValue = value == (index + 1).toByte()
                 val goodHolePosition = index == maxIndex && value == HOLE
                 goodNormalValue || goodHolePosition
             }.all { it }
@@ -91,7 +95,7 @@ interface Taquin {
         maxIndex.toString().length.let { len ->
             (0 until size).joinToString("\n") { y ->
                 (0 until size)
-                    .map { x -> Position(x, y) }
+                    .map { x -> Position(x.toByte(), y.toByte()) }
                     .joinToString(" ") {
                         val value = this[it]
                         val s = if (value == HOLE) "·" else value.toString()
@@ -113,7 +117,7 @@ interface Taquin {
     }
 
     companion object {
-        const val HOLE = 0
+        const val HOLE: Byte = 0
     }
 }
 

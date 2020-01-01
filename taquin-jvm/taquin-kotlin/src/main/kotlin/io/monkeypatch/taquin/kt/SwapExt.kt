@@ -1,16 +1,17 @@
 package io.monkeypatch.taquin.kt
 
 
-fun IntArray.swap(i: Int, j: Int): IntArray {
+fun ByteArray.swap(i: Int, j: Int): ByteArray {
     val result = this.clone()
     result[i] = this[j]
     result[j] = this[i]
     return result
 }
 
-fun <T> MutableList<T>.swap(i: Int, j: Int): MutableList<T> {
-    val tmp = this[i]
-    this[i] = this[j]
-    this[j] = tmp
-    return this // FIXME check defensive copy
+fun <T> List<T>.swap(i: Int, j: Int): List<T> {
+    val lst = this.toMutableList()
+    val tmp = lst[i]
+    lst[i] = lst[j]
+    lst[j] = tmp
+    return lst.toList() // FIXME check defensive copy
 }

@@ -24,7 +24,7 @@ class SolveTest : DescribeSpec() {
 
         describe("Solve 3x3 - 2") {
             val t = TaquinArray.fromString(3, "5,3,1,  7,2,8,  0,6,4") as TaquinArray
-            val maxDepth = 30
+            val maxDepth = 50
 
             it("Should be solved in less than $maxDepth moves") {
                 val monitor = Monitor.logger<State, Move>() and Monitor.maxDepth(50)
