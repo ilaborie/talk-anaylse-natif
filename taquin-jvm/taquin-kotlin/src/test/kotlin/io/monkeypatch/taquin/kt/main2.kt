@@ -37,11 +37,11 @@ private fun generateToFile(size: Int, count: Int, outputFile: File) {
 
 
 private fun generateOneWithSolution(size: Int, count: Int) {
-    val t = TaquinArray.solved(size)
+    val base = TaquinArray.solved(size)
 
     var previousMove: Move = DOWN
     val moves: MutableList<Move> = mutableListOf()
-    val result = (1..count).fold(t) { t, _ ->
+    val result = (1..count).fold(base) { t, _ ->
         val move = (t.availableMoves() - previousMove.inverse).random()
         previousMove = move
         moves += move

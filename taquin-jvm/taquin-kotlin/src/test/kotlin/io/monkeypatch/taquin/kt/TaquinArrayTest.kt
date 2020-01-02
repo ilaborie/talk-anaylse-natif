@@ -35,7 +35,7 @@ class TaquinArrayTest : DescribeSpec() {
             }
 
             it("should have hole index at 8") {
-                t.holeIndex shouldBe 8
+                t.holeIndex shouldBe 8.toByte()
             }
 
             it("should have hole position at (2,2)") {
