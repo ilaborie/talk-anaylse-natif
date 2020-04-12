@@ -1,0 +1,66 @@
+
+body {
+    position: absolute;
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+}
+
+main {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+}
+
+main pre {
+    font-size: 12vmin;
+    box-sizing: border-box;
+    border: medium solid saddlebrown;
+}
+
+main pre.solved {
+    border-color: forestgreen;
+}
+
+main aside {
+    margin-left: 1rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-direction: column;
+}
+
+main aside {
+    font-size: 4vmin;
+}
+main aside button {
+    font-size: inherit;
+}
+main aside .score {}
+main aside .score::before {
+    content: 'Move(s): ';
+}
+
+main aside .score:empty {
+    visibility: hidden;
+}
+
+/*pad*/
+.pad {
+    display: grid;
+    grid-template-areas: "q    up   e"
+                         "left hole right"
+                         "z    down c";
+}
+
+.pad button.up { grid-area: up; }
+.pad button.right { grid-area: right; }
+.pad button.down { grid-area: down; }
+.pad button.left { grid-area: left; }
+.pad button.hole { grid-area: hole; }
