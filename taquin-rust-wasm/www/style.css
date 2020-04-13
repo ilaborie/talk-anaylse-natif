@@ -1,3 +1,17 @@
+:root {
+    --col1: #EAE9E9;
+    --col2: #8F9C9B;
+    --col3: #8B8391;
+    --col4: #698FA1;
+    --col5: #2F3343;
+
+    --light: var(--col1);
+    --light-accent: var(--col2);
+    --main: var(--col3);
+    --dark-accent: var(--col4);
+    --dark: var(--col5);
+}
+
 
 body {
     position: absolute;
@@ -9,4 +23,7 @@ body {
     align-items: center;
     justify-content: center;
     font-family: sans-serif;
+
+    background: var(--dark);
+    color: var(--light);
 }
