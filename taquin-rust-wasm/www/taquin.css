@@ -1,0 +1,92 @@
+
+:host {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+}
+
+pre {
+    font-size: 12vmin;
+    box-sizing: border-box;
+    border: medium solid saddlebrown;
+}
+
+pre.solved {
+    border-color: forestgreen;
+}
+
+aside {
+    margin-left: 1rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-direction: column;
+}
+
+/*Aside*/
+aside {
+    font-size: 4vmin;
+}
+
+button.newTaquin {
+    border-radius: .25em;
+}
+
+aside button {
+    font-size: inherit;
+}
+
+aside .score {
+}
+
+aside .score::before {
+    content: 'Move(s): ';
+}
+
+aside .score:empty {
+    visibility: hidden;
+}
+
+/*pad*/
+.pad {
+    display: grid;
+    grid-template-areas: "q     down e" "right hole left" "z     up   c";
+}
+
+.pad button {
+    border: none;
+    background-color: lightgray;
+}
+
+.pad button.hole {
+    box-shadow: inset 0 0 0 1px hsla(0, 100%, 100%, .25);
+}
+
+.pad button.up {
+    grid-area: up;
+    border-bottom-left-radius: .25em;
+    border-bottom-right-radius: .25em;
+}
+
+.pad button.right {
+    grid-area: right;
+    border-top-left-radius: .25em;
+    border-bottom-left-radius: .25em;
+}
+
+.pad button.down {
+    grid-area: down;
+    border-top-left-radius: .25em;
+    border-top-right-radius: .25em;
+}
+
+.pad button.left {
+    grid-area: left;
+    border-top-right-radius: .25em;
+    border-bottom-right-radius: .25em;
+}
+
+.pad button.hole {
+    grid-area: hole;
+}
