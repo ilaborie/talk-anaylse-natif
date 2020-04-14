@@ -43,6 +43,7 @@ export class MkpTaquinElt extends HTMLElement {
         console.log('attributeChangedCallback');
         if (name === 'size' && oldValue !== newValue) {
             this.new();
+            this.init();
         }
     }
 
@@ -55,9 +56,12 @@ export class MkpTaquinElt extends HTMLElement {
         this.taquinElt.classList.add("grid", "grid-" + this.size);
         const lastSize = this.size ** 2;
         for (let i = 1; i < lastSize; i++) {
+            const tile = document.createElement("div");
+            tile.classList.add("tile")
+            tile.setAttribute('data-value', '' + i);
             const span = document.createElement("span");
-            span.setAttribute('data-value', i);
-            this.taquinElt.appendChild(span);
+            tile.appendChild(span);
+            this.taquinElt.appendChild(tile);
         }
 
         const asideElt = document.createElement("aside");
@@ -75,7 +79,8 @@ export class MkpTaquinElt extends HTMLElement {
         this.padElt = asideElt.querySelector(".pad");
 
         // Add all
-        const shadow = this.attachShadow({mode: "open"});
+        const shadow = this.shadowRoot || this.attachShadow({mode: "open"});
+        shadow.innerHTML = '';
         shadow.appendChild(styleElt);
         shadow.appendChild(this.taquinElt);
         shadow.appendChild(asideElt);
@@ -97,7 +102,7 @@ export class MkpTaquinElt extends HTMLElement {
                         const move = +elt.getAttribute('data-move');
                         this.move(move);
                     }
-               });
+                });
             });
 
         // Load Style
@@ -111,7 +116,10 @@ export class MkpTaquinElt extends HTMLElement {
     }
 
     new() {
-        this.taquin = Taquin.new(this.size);
+        const size = this.size;
+        console.log(`New taquin ${size}x${size}`);
+        this.taquin = Taquin.new(size);
+        this.taquin.shuffle(size ** 4 * 2);
         this.score = 0;
         this.state = 'game';
         this.render();
@@ -138,9 +146,8 @@ export class MkpTaquinElt extends HTMLElement {
                         const elt = this.taquinElt.childNodes.item(value - 1);
                         const position = this.taquin.get_position(i);
                         const {row, column} = position;
-                        elt.style.gridColumnStart = '' + (column + 1);
-                        elt.style.gridRowStart = '' + (row + 1);
-                        // FIXME cursor, move
+                        elt.style.setProperty('--column', '' + column);
+                        elt.style.setProperty('--row', '' + row);
                         const move = this.taquin.move_from_position(position);
                         if (typeof move === 'undefined') {
                             elt.removeAttribute("data-move");

@@ -85,13 +85,7 @@ impl Taquin {
             tiles.push((i + 1) as u8);
         }
         tiles.push(HOLE);
-        let mut result = Taquin { size, tiles };
-
-        //  Randomize
-        let count = size as u32 ^ 4 * 2;
-        result.shuffle(count);
-
-        result
+        Taquin { size, tiles }
     }
 
     pub fn size(&self) -> u8 {
@@ -168,18 +162,7 @@ impl Taquin {
         panic!("Hole not found in {:?}", self);
     }
 
-    fn valid_moves(&self, hole_position: Position, last_move: Option<Move>) -> Vec<Move> {
-        let mut valid_moves = vec![];
-        for m in Move::all() {
-            let not_back = last_move.map_or(true, |last| last != m.reverse());
-            if not_back && self.is_valid(m, hole_position) {
-                valid_moves.push(m);
-            }
-        }
-        valid_moves
-    }
-
-    fn shuffle(&mut self, count: u32) {
+    pub fn shuffle(&mut self, count: u32) {
         let mut hole_position = self.find_hole();
         let mut last_move = None::<Move>;
 
@@ -196,6 +179,17 @@ impl Taquin {
             last_move = Some(current_move);
             self.move_hole(current_move);
         }
+    }
+
+    fn valid_moves(&self, hole_position: Position, last_move: Option<Move>) -> Vec<Move> {
+        let mut valid_moves = vec![];
+        for m in Move::all() {
+            let not_back = last_move.map_or(true, |last| last != m.reverse());
+            if not_back && self.is_valid(m, hole_position) {
+                valid_moves.push(m);
+            }
+        }
+        valid_moves
     }
 }
 
