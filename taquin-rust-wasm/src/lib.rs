@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 use js_sys::Math::random;
+use wasm_bindgen::__rt::std::collections::HashSet;
 
 mod utils;
 
@@ -15,7 +16,7 @@ const HOLE: Tile = 0;
 
 #[wasm_bindgen]
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Hash, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Move {
     Up = 0,
     Right = 1,
@@ -49,6 +50,19 @@ impl Move {
 }
 
 #[wasm_bindgen]
+pub struct Moves(Vec<Move>);
+
+#[wasm_bindgen]
+impl Moves {
+    pub fn moves(&self) -> *const Move {
+        self.0.as_ptr()
+    }
+    pub fn size(&self) -> usize {
+        self.0.len()
+    }
+}
+
+#[wasm_bindgen]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Position {
     pub row: u8,
@@ -56,20 +70,13 @@ pub struct Position {
 }
 
 #[wasm_bindgen]
-#[derive(Debug, PartialEq, Eq)]
-pub struct TaquinStatus {
-    pub moved: bool,
-    pub win: bool,
-    pub from: Position,
-    pub to: Position,
-}
-
-#[wasm_bindgen]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Hash, Clone, Debug, PartialEq, Eq)]
 pub struct Taquin {
     size: u8,
     tiles: Vec<Tile>,
 }
+
+type StateWithHistory = (Taquin, Vec<Move>);
 
 #[wasm_bindgen]
 impl Taquin {
@@ -105,24 +112,22 @@ impl Taquin {
                 return false;
             };
         }
-        true
+        false
     }
 
-    pub fn move_hole(&mut self, user_move: Move) -> TaquinStatus {
+    pub fn move_hole(&mut self, user_move: Move) -> bool {
         let hole_position = self.find_hole();
 
-        let (moved, from, to) = if self.is_valid(user_move, hole_position) {
+        if self.is_valid(user_move, hole_position) {
             let position = user_move.apply(hole_position);
             let hole_index = self.get_index(hole_position);
             let index = self.get_index(position);
             self.tiles.swap(index, hole_index);
 
-            (true, position, hole_position)
+            true
         } else {
-            (false, hole_position, hole_position)
-        };
-
-        TaquinStatus { moved, win: self.is_solved(), from, to }
+            false
+        }
     }
 
     pub fn move_from_position(&self, position: Position) -> Option<Move> {
@@ -181,6 +186,14 @@ impl Taquin {
         }
     }
 
+    pub fn solve(&self) -> Moves {
+        let mut states = HashSet::new();
+        states.insert(self.clone());
+        let initial = vec![(self.clone(), vec![])];
+        let moves = Taquin::solve_aux(initial, &mut states);
+        Moves(moves)
+    }
+
     fn valid_moves(&self, hole_position: Position, last_move: Option<Move>) -> Vec<Move> {
         let mut valid_moves = vec![];
         for m in Move::all() {
@@ -190,6 +203,39 @@ impl Taquin {
             }
         }
         valid_moves
+    }
+
+    // Solving aux
+    fn solve_aux(states_with_history: Vec<StateWithHistory>, visited_states: &mut HashSet<Taquin>) -> Vec<Move> {
+        let mut next = vec![];
+        println!("Visited: {}", visited_states.len());
+        for (taquin, history) in states_with_history {
+            // Try found solution
+            if taquin.is_solved() {
+                return history;
+            }
+
+            // Find next states
+            let hole = taquin.find_hole();
+            let last_move = history.last().map(|m| m.reverse());
+            let available_moves = taquin.valid_moves(hole, last_move);
+            for m in available_moves {
+                // Apply move
+                let mut new_taquin = taquin.clone();
+                new_taquin.move_hole(m);
+
+                if !visited_states.contains(&new_taquin) {
+                    // Found a new state
+                    visited_states.insert(new_taquin.clone());
+                    let mut next_history = history.clone();
+                    next_history.push(m);
+                    next.push((new_taquin, next_history));
+                }
+            }
+        }
+
+        // Deeper
+        Taquin::solve_aux(next, visited_states)
     }
 }
 
@@ -244,17 +290,17 @@ mod test {
     #[test]
     fn is_solved() {
         let taquin = Taquin::new(3);
-        assert!(!taquin.is_solved());
+        assert!(taquin.is_solved());
 
         let taquin = Taquin {
             size: 3,
             tiles: vec![
-                1, 2, 3,
-                4, 5, 6,
-                7, 8, 0,
+                5, 0, 3,
+                8, 1, 2,
+                4, 7, 6,
             ],
         };
-        assert!(taquin.is_solved());
+        assert!(!taquin.is_solved());
     }
 
     #[test]
@@ -331,4 +377,37 @@ mod test {
             4, 7, 6,
         ], taquin.tiles);
     }
+
+    #[test]
+    fn solve_3x3() {
+        let taquin = Taquin {
+            size: 3,
+            tiles: vec![
+                5, 0, 3,
+                8, 1, 2,
+                4, 7, 6,
+            ],
+        };
+
+        let result = taquin.solve();
+
+        assert_eq!(31, result.size());
+    }
+
+    // #[test]
+    // fn solve_4x4() {
+    //     let taquin = Taquin {
+    //         size: 4,
+    //         tiles: vec![
+    //             15, 13, 1, 14,
+    //             11, 0, 6, 7,
+    //             10, 3, 4, 2,
+    //             9, 8, 4, 12,
+    //         ],
+    //     };
+    //
+    //     let result = taquin.solve();
+    //
+    //     assert_eq!(31, result.size());
+    // }
 }

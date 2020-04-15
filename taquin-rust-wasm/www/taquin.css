@@ -2,8 +2,8 @@
 :host {
     display: flex;
     flex-direction: row;
-    align-items: stretch;
-    justify-content: center;
+    align-items: center;
+    justify-content: space-around;
 
     --gap: var(--taquin-gap, 4px);
     --tile: var(--taquin-tile, 10vmin);
@@ -12,22 +12,18 @@
 
 /*Grid*/
 .grid {
-    position: relative;
     background: var(--main);
     border: 2vmin solid var(--light-accent);
     border-radius: .25em;
-
     box-shadow: .125rem .125rem .25rem rgba(0,0,0,.5),
           inset .125rem .125rem .25rem rgba(0,0,0,.5);
 
+    position: relative;
     padding: var(--gap);
     box-sizing: content-box;
-    width: calc((var(--gap) + var(--tile)) * var(--size) - var(--gap));
-    height: calc((var(--gap) + var(--tile)) * var(--size) - var(--gap));
+    width: calc((var(--gap) + var(--tile)) * var(--size, 1) - var(--gap));
+    height: calc((var(--gap) + var(--tile)) * var(--size, 1) - var(--gap));
 }
-
-.grid.grid-3 {--size: 3;}
-.grid.grid-4 { --size: 4;}
 
 .tile {
     position: absolute;
@@ -47,8 +43,8 @@
     width: var(--tile);
     height: var(--tile);
 
-    top: calc(var(--gap) + (var(--gap) + var(--tile)) * var(--row));
-    left:calc(var(--gap) + (var(--gap) + var(--tile)) * var(--column));
+    top: calc(var(--gap) + (var(--gap) + var(--tile)) * var(--row, 0));
+    left:calc(var(--gap) + (var(--gap) + var(--tile)) * var(--column, 0));
 
     transition: all .1s;
 }
@@ -98,11 +94,12 @@ aside {
     font-size: 4vmin;
 }
 
-button.newTaquin {
+button.newTaquin, button.cheat {
     border-radius: .25em;
     background: var(--dark-accent);
     color: var(--light);
     border-color: rgba(0,0,0,.25);
+    margin: .5em;
 }
 
 aside button {
@@ -132,8 +129,8 @@ aside .score:empty {
 
 .pad button {
     border: none;
-    /*background-color: var(--main);*/
-    /*color: var(--light);*/
+    width: 3ch;
+    height: 3ch;
 }
 
 .pad button.hole {

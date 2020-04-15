@@ -3,6 +3,48 @@ import {memory} from "taquin_rust_wasm/taquin_rust_wasm_bg";
 
 const states = ['init', 'game', 'win'];
 
+const allMoves = [];
+allMoves[Move.Up] = Move.Up;
+allMoves[Move.Right] = Move.Right;
+allMoves[Move.Down] = Move.Down;
+allMoves[Move.Left] = Move.Left;
+
+const moveLabels = [];
+moveLabels[Move.Up] = '⬆️';
+moveLabels[Move.Right] = '➡️';
+moveLabels[Move.Down] = '⬇️';
+moveLabels[Move.Left] = '⬅️';
+
+const moveClassName = [];
+moveClassName[Move.Up] = 'up';
+moveClassName[Move.Right] = 'right';
+moveClassName[Move.Down] = 'down';
+moveClassName[Move.Left] = 'left';
+
+const delay = (delayInMs, block) => new Promise(resolve => {
+    setTimeout(function () {
+        resolve(block && block());
+    }, delayInMs);
+});
+
+function createButtonElement(label, className, clickEvent) {
+    const btn = document.createElement("button");
+    btn.type = 'button';
+    if (label) {
+        btn.textContent = label;
+    }
+
+    if (className) {
+        btn.classList.add(className);
+    }
+
+    if (clickEvent) {
+        btn.addEventListener('click', clickEvent);
+    }
+
+    return btn;
+}
+
 // Web component
 export class MkpTaquinElt extends HTMLElement {
 
@@ -14,14 +56,7 @@ export class MkpTaquinElt extends HTMLElement {
         super();
         this.taquin = null;
         this.score = 0;
-        this.state = 'init'; // game success
-        this.actions = {
-            newTaquin: () => this.new(),
-            up: () => this.move(Move.Up),
-            right: () => this.move(Move.Right),
-            down: () => this.move(Move.Down),
-            left: () => this.move(Move.Left)
-        };
+        this.state = 'init';
         this.buttons = {};
     }
 
@@ -50,10 +85,18 @@ export class MkpTaquinElt extends HTMLElement {
     init() {
         if (!this.isConnected) return;
 
+        // Style
         const styleElt = document.createElement("style");
+        fetch('./taquin.css')
+            .then((response) => response.text())
+            .then(content => {
+                styleElt.innerHTML = content
+            });
 
+        // Taquin
         this.taquinElt = document.createElement("div");
-        this.taquinElt.classList.add("grid", "grid-" + this.size);
+        this.taquinElt.classList.add("grid");
+        this.taquinElt.style.setProperty("--size", this.size);
         const lastSize = this.size ** 2;
         for (let i = 1; i < lastSize; i++) {
             const tile = document.createElement("div");
@@ -62,21 +105,37 @@ export class MkpTaquinElt extends HTMLElement {
             const span = document.createElement("span");
             tile.appendChild(span);
             this.taquinElt.appendChild(tile);
+
+            span.addEventListener('click', () => {
+                if (span.hasAttribute('data-move')) {
+                    const move = +span.getAttribute('data-move');
+                    this.move(move);
+                }
+            });
         }
 
+        // Left block
         const asideElt = document.createElement("aside");
-        asideElt.innerHTML = `
-<button type="button" class="newTaquin">➕ New</button>
-<div class="pad">
-    <button type="button" class="up">⬆️</button>
-    <button type="button" class="left">⬅️</button>
-    <button type="button" class="hole" disabled>⚫️</button>
-    <button type="button" class="right">➡️</button>
-    <button type="button" class="down">⬇️</button>
-</div>
-<output class="score"></output>`;
-        this.scoreElt = asideElt.querySelector(".score");
-        this.padElt = asideElt.querySelector(".pad");
+        const btnNewTaquin = createButtonElement('➕ New', 'newTaquin', () => this.new());
+        asideElt.appendChild(btnNewTaquin);
+        this.btnCheat = createButtonElement('🤖 Cheat', 'cheat', () => this.cheat());
+        asideElt.appendChild(this.btnCheat);
+        this.padElt = document.createElement('div');
+        asideElt.appendChild(this.padElt);
+        this.padElt.classList.add('pad');
+        const btnHole = createButtonElement('⚫️', 'hole');
+        btnHole.disabled = true;
+        this.padElt.appendChild(btnHole);
+        allMoves.forEach(move => {
+            const className = moveClassName[move];
+            const btn = createButtonElement(moveLabels[move], className, () => this.move(move))
+            this.buttons[className] = btn;
+            this.padElt.appendChild(btn);
+        });
+        asideElt.appendChild(this.padElt);
+        this.scoreElt = document.createElement('output');
+        this.scoreElt.classList.add('score');
+        asideElt.appendChild(this.scoreElt);
 
         // Add all
         const shadow = this.shadowRoot || this.attachShadow({mode: "open"});
@@ -84,33 +143,6 @@ export class MkpTaquinElt extends HTMLElement {
         shadow.appendChild(styleElt);
         shadow.appendChild(this.taquinElt);
         shadow.appendChild(asideElt);
-
-        // Event Bindings
-        asideElt.querySelectorAll("button")
-            .forEach((btn) => {
-                const className = btn.classList.item(0);
-                const action = this.actions[className];
-                if (action) {
-                    this.buttons[className] = btn;
-                    btn.addEventListener('click', action);
-                }
-            });
-        this.taquinElt.querySelectorAll('span')
-            .forEach((elt) => {
-                elt.addEventListener('click', () => {
-                    if (elt.hasAttribute('data-move')) {
-                        const move = +elt.getAttribute('data-move');
-                        this.move(move);
-                    }
-                });
-            });
-
-        // Load Style
-        fetch('./taquin.css')
-            .then((response) => response.text())
-            .then(content => {
-                styleElt.innerHTML = content
-            });
 
         this.render();
     }
@@ -161,9 +193,11 @@ export class MkpTaquinElt extends HTMLElement {
             }
         }
 
+        // Cheat
+        this.btnCheat.style.visibility = this.state !== 'game'?'hidden':'visible';
+
         // Score
         if (this.scoreElt && typeof this.score === 'number') {
-
             if (this.state == 'win') {
                 this.scoreElt.innerHTML = '🎉 ' + this.score;
             } else {
@@ -184,6 +218,7 @@ export class MkpTaquinElt extends HTMLElement {
         if (this.padElt) {
             this.padElt.style.visibility = this.state == "game" ? "visible" : "hidden";
             if (this.taquin) {
+
                 Object.entries(this.buttons).forEach(([key, btn]) => {
                     const hole = this.taquin.find_hole();
                     switch (key) {
@@ -208,11 +243,24 @@ export class MkpTaquinElt extends HTMLElement {
     move(move) {
         if (!this.taquin) return;
 
-        const {moved, win, from, to} = this.taquin.move_hole(move);
+        const moved = this.taquin.move_hole(move);
 
-        this.state = win ? 'win' : 'game';
+        this.state = this.taquin.is_solved() ? 'win' : 'game';
         this.score += moved ? 1 : 0;
 
         this.render();
+    }
+
+    cheat() {
+        console.log('Cheat');
+        const solution = this.taquin.solve();
+        let count = solution.size();
+        console.log('Solved in',count, 'moves');
+        const moves = new Uint8Array(memory.buffer, solution.moves(), count);
+
+        let p = Promise.resolve();
+        for (let move of moves) {
+            p = p.then(() => delay(300, () => this.move(move)));
+        }
     }
 }
