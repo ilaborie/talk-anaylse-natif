@@ -4,16 +4,21 @@
   "description": "create an app to consume rust-generated wasm packages",
   "main": "index.js",
   "scripts": {
+    "prebuild": "rimraf dist/",
     "build": "webpack --config webpack.config.js",
-    "start": "webpack-dev-server"
+    "start": "webpack-dev-server",
+    "publish": "gh-pages -d dist"
   },
   "dependencies": {
     "taquin_rust_wasm": "file:../pkg"
   },
   "devDependencies": {
+    "copy-webpack-plugin": "^5.0.0",
+    "gh-pages": "^2.2.0",
+    "raw-loader": "^4.0.1",
+    "rimraf": "^3.0.2",
     "webpack": "^4.29.3",
     "webpack-cli": "^3.1.0",
-    "webpack-dev-server": "^3.1.5",
-    "copy-webpack-plugin": "^5.0.0"
+    "webpack-dev-server": "^3.1.5"
   }
 }

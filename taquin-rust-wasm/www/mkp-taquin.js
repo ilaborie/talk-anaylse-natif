@@ -1,7 +1,6 @@
 import {Taquin, Move} from "taquin_rust_wasm";
 import {memory} from "taquin_rust_wasm/taquin_rust_wasm_bg";
-
-const states = ['init', 'game', 'win'];
+import css from './taquin.css';
 
 const allMoves = [];
 allMoves[Move.Up] = Move.Up;
@@ -87,11 +86,7 @@ export class MkpTaquinElt extends HTMLElement {
 
         // Style
         const styleElt = document.createElement("style");
-        fetch('./taquin.css')
-            .then((response) => response.text())
-            .then(content => {
-                styleElt.innerHTML = content
-            });
+        styleElt.textContent = css;
 
         // Taquin
         this.taquinElt = document.createElement("div");
@@ -107,7 +102,7 @@ export class MkpTaquinElt extends HTMLElement {
             this.taquinElt.appendChild(tile);
 
             span.addEventListener('click', () => {
-                if (span.hasAttribute('data-move')) {
+                if (this.state === 'game' && span.hasAttribute('data-move')) {
                     const move = +span.getAttribute('data-move');
                     this.move(move);
                 }
@@ -116,8 +111,8 @@ export class MkpTaquinElt extends HTMLElement {
 
         // Left block
         const asideElt = document.createElement("aside");
-        const btnNewTaquin = createButtonElement('➕ New', 'newTaquin', () => this.new());
-        asideElt.appendChild(btnNewTaquin);
+        this.btnNewTaquin = createButtonElement('➕ New', 'newTaquin', () => this.new());
+        asideElt.appendChild(this.btnNewTaquin);
         this.btnCheat = createButtonElement('🤖 Cheat', 'cheat', () => this.cheat());
         asideElt.appendChild(this.btnCheat);
         this.padElt = document.createElement('div');
@@ -128,7 +123,11 @@ export class MkpTaquinElt extends HTMLElement {
         this.padElt.appendChild(btnHole);
         allMoves.forEach(move => {
             const className = moveClassName[move];
-            const btn = createButtonElement(moveLabels[move], className, () => this.move(move))
+            const btn = createButtonElement(moveLabels[move], className, () => {
+                if (this.state === 'game') {
+                    this.move(move);
+                }
+            });
             this.buttons[className] = btn;
             this.padElt.appendChild(btn);
         });
@@ -158,13 +157,6 @@ export class MkpTaquinElt extends HTMLElement {
     }
 
     render() {
-        // State
-        if (this.shadowRoot && this.state) {
-            const toRemove = states.filter((it) => it === this.state);
-            this.shadowRoot.host.classList.remove(toRemove);
-            this.shadowRoot.host.classList.add(this.state);
-        }
-
         // Grid
         if (this.taquinElt) {
             if (this.taquin) {
@@ -176,15 +168,17 @@ export class MkpTaquinElt extends HTMLElement {
                     const value = tiles[i];
                     if (value !== 0) {
                         const elt = this.taquinElt.childNodes.item(value - 1);
-                        const position = this.taquin.get_position(i);
-                        const {row, column} = position;
-                        elt.style.setProperty('--column', '' + column);
-                        elt.style.setProperty('--row', '' + row);
-                        const move = this.taquin.move_from_position(position);
-                        if (typeof move === 'undefined') {
-                            elt.removeAttribute("data-move");
-                        } else {
-                            elt.setAttribute("data-move", "" + move);
+                        if (elt) {
+                            const position = this.taquin.get_position(i);
+                            const {row, column} = position;
+                            elt.style.setProperty('--column', '' + column);
+                            elt.style.setProperty('--row', '' + row);
+                            const move = this.taquin.move_from_position(position);
+                            if (typeof move === 'undefined') {
+                                elt.removeAttribute("data-move");
+                            } else {
+                                elt.setAttribute("data-move", "" + move);
+                            }
                         }
                     }
                 }
@@ -193,8 +187,15 @@ export class MkpTaquinElt extends HTMLElement {
             }
         }
 
+        // New Taquin
+        if (this.btnNewTaquin) {
+            this.btnNewTaquin.style.visibility = (this.state === 'win' || this.state === 'game') ? 'visible' : 'hidden'
+        }
+
         // Cheat
-        this.btnCheat.style.visibility = this.state !== 'game'?'hidden':'visible';
+        if (this.btnCheat) {
+            this.btnCheat.style.visibility = (this.size === 4 || this.state !== 'game') ? 'hidden' : 'visible';
+        }
 
         // Score
         if (this.scoreElt && typeof this.score === 'number') {
@@ -218,49 +219,55 @@ export class MkpTaquinElt extends HTMLElement {
         if (this.padElt) {
             this.padElt.style.visibility = this.state == "game" ? "visible" : "hidden";
             if (this.taquin) {
-
-                Object.entries(this.buttons).forEach(([key, btn]) => {
-                    const hole = this.taquin.find_hole();
-                    switch (key) {
-                        case "up":
-                            btn.disabled = !this.taquin.is_valid(Move.Up, hole);
-                            break;
-                        case "right":
-                            btn.disabled = !this.taquin.is_valid(Move.Right, hole);
-                            break;
-                        case "down":
-                            btn.disabled = !this.taquin.is_valid(Move.Down, hole);
-                            break;
-                        case "left":
-                            btn.disabled = !this.taquin.is_valid(Move.Left, hole);
-                            break;
-                    }
-                });
+                Object.entries(this.buttons)
+                    .forEach(([key, btn]) => {
+                        const hole = this.taquin.find_hole();
+                        switch (key) {
+                            case "up":
+                                btn.disabled = this.state !== 'game' || !this.taquin.is_valid(Move.Up, hole);
+                                break;
+                            case "right":
+                                btn.disabled = this.state !== 'game' || !this.taquin.is_valid(Move.Right, hole);
+                                break;
+                            case "down":
+                                btn.disabled = this.state !== 'game' || !this.taquin.is_valid(Move.Down, hole);
+                                break;
+                            case "left":
+                                btn.disabled = this.state !== 'game' || !this.taquin.is_valid(Move.Left, hole);
+                                break;
+                        }
+                    });
             }
         }
     }
 
     move(move) {
-        if (!this.taquin) return;
+        if (!this.taquin || this.state !== 'game') return;
+        this.innerMove(move);
+    }
 
-        const moved = this.taquin.move_hole(move);
+    innerMove(move) {
+        if (this.taquin) {
+            const moved = this.taquin.move_hole(move);
 
-        this.state = this.taquin.is_solved() ? 'win' : 'game';
-        this.score += moved ? 1 : 0;
+            this.state = this.taquin.is_solved() ? 'win' : this.state;
+            this.score += moved ? 1 : 0;
 
-        this.render();
+            this.render();
+        }
     }
 
     cheat() {
         console.log('Cheat');
         const solution = this.taquin.solve();
         let count = solution.size();
-        console.log('Solved in',count, 'moves');
+        console.log('Solved in', count, 'moves');
         const moves = new Uint8Array(memory.buffer, solution.moves(), count);
 
+        this.state = 'cheat';
         let p = Promise.resolve();
         for (let move of moves) {
-            p = p.then(() => delay(300, () => this.move(move)));
+            p = p.then(() => delay(300, () => this.innerMove(move)));
         }
     }
 }

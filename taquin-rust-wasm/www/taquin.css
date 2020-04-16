@@ -14,7 +14,7 @@
 .grid {
     background: var(--main);
     border: 2vmin solid var(--light-accent);
-    border-radius: .25em;
+    border-radius: .5em;
     box-shadow: .125rem .125rem .25rem rgba(0,0,0,.5),
           inset .125rem .125rem .25rem rgba(0,0,0,.5);
 

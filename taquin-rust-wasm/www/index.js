@@ -9,7 +9,17 @@ const keyActions = {
     ArrowUp: (taquin) => taquin.move(Move.Up),
     ArrowRight: (taquin) => taquin.move(Move.Right),
     ArrowDown: (taquin) => taquin.move(Move.Down),
-    ArrowLeft: (taquin) => taquin.move(Move.Left)
+    ArrowLeft: (taquin) => taquin.move(Move.Left),
+    '3': (taquin) => {
+        if (taquin.size !== 3) {
+            taquin.setAttribute('size', '3');
+        }
+    },
+    '4': (taquin) => {
+        if (taquin.size !== 4) {
+            taquin.setAttribute('size', '4');
+        }
+    }
 };
 
 // Event Bindings
