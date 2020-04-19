@@ -1,5 +1,4 @@
 use std::slice::Iter;
-use crate::taquin::Move;
 
 pub type Row = u8;
 pub type Column = u8;

@@ -103,6 +103,8 @@ impl Taquin {
         if tiles.len() != last_index { panic!("") }
 
         let grid = Grid::new(size, tiles);
+        grid.find(|&tile| tile == Hole)
+            .expect("No Hole found, should contains a '0'");
 
         Taquin { grid }
     }
@@ -114,10 +116,14 @@ impl Taquin {
 
         for _i in 0..count {
             // Valid moves
-            let valid_moves = self.valid_moves(last_move);
+            let valid_moves = self.valid_moves(last_move.as_ref());
 
             // Shuffle
-            let index = rng.gen_range(0, valid_moves.len() - 1);
+            let index = if valid_moves.len() == 1 {
+                0
+            } else {
+                rng.gen_range(0, valid_moves.len() - 1)
+            };
             let current_move = valid_moves[index];
 
             // update
@@ -186,12 +192,12 @@ impl Taquin {
         }
     }
 
-    fn valid_moves(&self, last_move: Option<Move>) -> Vec<Move> {
+    fn valid_moves(&self, last_move: Option<&Move>) -> Vec<Move> {
         let hole_position = self.find_hole();
 
         let mut valid_moves = vec![];
         for m in Move::all() {
-            let not_back = last_move.map_or(true, |last| last != m.reverse());
+            let not_back = last_move.map_or(true, |last| last != &m.reverse());
             if not_back && self.is_valid(m, &hole_position) {
                 valid_moves.push(m);
             }
@@ -221,8 +227,8 @@ impl Problem<Move> for Taquin {
         self.is_solved()
     }
 
-    fn available_steps(&self) -> Vec<Move> {
-        self.valid_moves(None)
+    fn available_steps(&self, previous_steps: &Vec<Move>) -> Vec<Move> {
+        self.valid_moves(previous_steps.last())
     }
 
     fn next(&self, step: Move) -> Self {
@@ -252,9 +258,9 @@ mod tests {
 
         #[test]
         fn u8_to_tile() {
-            assert_eq!(3.into(), Value(3));
-            assert_eq!(0.into(), Hole);
-            assert_eq!(0.into(), Hole);
+            assert_eq!(Value(3), 3.into());
+            assert_eq!(Hole, 0.into());
+            assert_eq!(Hole, 0.into());
         }
     }
 
@@ -308,7 +314,6 @@ mod tests {
 
         mod is_solved {
             use super::*;
-            use test::assert_test_result;
 
             #[test]
             fn solved() {
@@ -325,7 +330,6 @@ mod tests {
 
         mod find_hole {
             use super::*;
-            use core::num::dec2flt::parse::Sign::Positive;
 
             #[test]
             fn ok() {
@@ -342,17 +346,21 @@ mod tests {
             fn ok() {
                 let taquin = given::a_taquin();
 
-                taquin.move_hole(Move::Up);
-                assert_eq!(taquin, Taquin::from_str(3, "5,1,3,  8,0,2,  4,7,6"));
+                let m = Move::Up;
+                let taquin = taquin.move_hole(m);
+                assert_eq!(taquin, Taquin::from_str(3, "5,1,3,  8,0,2,  4,7,6"), "Move {} ", m);
 
-                taquin.move_hole(Move::Right);
-                assert_eq!(taquin, Taquin::from_str(3, "5,1,3,  0,8,2,  4,7,6"));
+                let m = Move::Right;
+                let taquin = taquin.move_hole(m);
+                assert_eq!(taquin, Taquin::from_str(3, "5,1,3,  0,8,2,  4,7,6"), "Move {} ", m);
 
-                taquin.move_hole(Move::Down);
-                assert_eq!(taquin, Taquin::from_str(3, "0,1,3,  5,8,2,  4,7,6"));
+                let m = Move::Down;
+                let taquin = taquin.move_hole(m);
+                assert_eq!(taquin, Taquin::from_str(3, "0,1,3,  5,8,2,  4,7,6"), "Move {} ", m);
 
-                taquin.move_hole(Move::Left);
-                assert_eq!(taquin, given::a_taquin());
+                let m = Move::Left;
+                let taquin = taquin.move_hole(m);
+                assert_eq!(taquin, Taquin::from_str(3, "1,0,3,  5,8,2,  4,7,6"), "Move {} ", m);
             }
         }
 
@@ -402,14 +410,14 @@ mod tests {
             fn ok() {
                 let taquin = given::a_taquin();
                 let moves = taquin.valid_moves(None);
-                assert_eq!(moves, vec![Move::Up, Move::Right, Move::Down])
+                assert_eq!(moves, vec![Move::Up, Move::Right, Move::Left])
             }
 
             #[test]
             fn ok_with_previous() {
                 let taquin = given::a_taquin();
-                let moves = taquin.valid_moves(Some(Move::Down));
-                assert_eq!(moves, vec![Move::Right, Move::Down])
+                let moves = taquin.valid_moves(Some(&Move::Down));
+                assert_eq!(moves, vec![Move::Right, Move::Left])
             }
         }
     }

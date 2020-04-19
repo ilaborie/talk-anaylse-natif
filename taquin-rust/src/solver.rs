@@ -10,14 +10,13 @@ pub enum SolverError {
 pub trait Problem<S: Clone>: Hash + Clone + Eq {
     fn is_solved(&self) -> bool;
 
-    fn available_steps(&self) -> Vec<S>;
+    fn available_steps(&self, previous_steps: &Vec<S>) -> Vec<S>;
 
     fn next(&self, step: S) -> Self;
 
     fn solve(&self) -> Result<Vec<S>, SolverError> {
         let mut states = HashSet::new();
         states.insert(self.clone());
-
         let initial = vec![(self.clone(), vec![])];
 
         solve_aux(initial, &mut states)
@@ -37,12 +36,11 @@ fn solve_aux<P, S>(history: Vec<(P, Vec<S>)>, visited: &mut HashSet<P>) -> Resul
             return Ok(steps);
         }
 
-        // Find next states
-        let available_steps = state.available_steps();
+        // Find next states  FIXME previous
+        let available_steps = state.available_steps(&steps);
         for step in available_steps {
             // Apply step
-            let new_state = state.clone();
-            new_state.next(step.clone());
+            let new_state = state.clone().next(step.clone());
 
             if !visited.contains(&new_state) {
                 // Found a new state
