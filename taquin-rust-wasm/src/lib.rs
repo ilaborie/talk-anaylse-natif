@@ -29,7 +29,7 @@ impl Move {
         vec![Move::Up, Move::Right, Move::Down, Move::Left]
     }
 
-    fn apply(&self, position: Position) -> Position {
+    fn apply(self, position: Position) -> Position {
         let Position { row, column } = position;
         match self {
             Move::Up => Position { row: row + 1, column },
@@ -134,7 +134,7 @@ impl Taquin {
         let hole_position = self.find_hole();
         Move::all().iter()
             .find(|&m| m.apply(hole_position) == position)
-            .map(|&m| m)
+            .copied()
     }
 
     pub fn is_valid(&self, user_move: Move, hole_position: Position) -> bool {

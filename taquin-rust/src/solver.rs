@@ -10,7 +10,7 @@ pub enum SolverError {
 pub trait Problem<S: Clone>: Hash + Clone + Eq {
     fn is_solved(&self) -> bool;
 
-    fn available_steps(&self, previous_steps: &Vec<S>) -> Vec<S>;
+    fn available_steps(&self, previous_steps: &[S]) -> Vec<S>;
 
     fn next(&self, step: S) -> Self;
 

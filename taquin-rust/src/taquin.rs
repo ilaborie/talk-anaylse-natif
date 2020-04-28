@@ -215,7 +215,7 @@ impl Display for Taquin {
             let pos = self.grid.index_to_position(i).unwrap();
             if pos.column() > 0 { write!(f, " ")?; }
             write!(f, "{:width$}", value, width = width)?;
-            if pos.column() == (size - 1) && pos.row() < (size - 1) { write!(f, "\n")?; }
+            if pos.column() == (size - 1) && pos.row() < (size - 1) { writeln!(f, "")?; }
         }
         Ok(())
     }
@@ -227,7 +227,7 @@ impl Problem<Move> for Taquin {
         self.is_solved()
     }
 
-    fn available_steps(&self, previous_steps: &Vec<Move>) -> Vec<Move> {
+    fn available_steps(&self, previous_steps: &[Move]) -> Vec<Move> {
         self.valid_moves(previous_steps.last())
     }
 
